@@ -206,6 +206,185 @@
             
               
                 
+                <a class="post-title-link" href="/2016/03/21/test/" itemprop="url">
+                  未命名
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-21T22:29:01+08:00" content="2016-03-21">
+              2016-03-21
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>test</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/03/21/spider_zhengfang/" itemprop="url">
+                  未命名
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-21T22:29:01+08:00" content="2016-03-21">
+              2016-03-21
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p></p><h1 id="正方系统模拟登陆">正方系统模拟登陆</h1><p></p>
+<p>在爬取的时候，首先使用浏览器登陆进行抓包，<br><br><img src="https://i.imgur.com/wTfFiMW.png" alt="enter image description here"></p><br><p>第一次抓包主要提交了两次，第一次是向default2.aspx进行post提交<br><br><img src="https://i.imgur.com/6d3i0l3.png" alt="enter image description here"></p><br><p>，虽然被重定向，但是这一次提交，完成了数据的验证，验证的字段如图所示，第一个字段是登陆界面的一个隐藏字段，可以通过正则获取到，txtSecretCode是验证码，这是正方系统的一个小bug，在我们模拟登陆的时候可以忽略，RadioButtonList1代表的是学生。<br><br><img src="https://i.imgur.com/VUfXeXz.png" alt="enter image description here"><br><br>上图中我们可以看到Request URL中附加了一个字段，这个字段是随即的，经过测试，得出正方系统有两种登陆方式，一种是通过cookie来确认用户，另一种是通过随即字符串的形式，现在我们校网所使用的是随机字符串的形式。在第一次向default2.aspx 进行post提交时，可能是通过js产生了随即字符串并被附着在url中，验证通过之后会被重定向到xs_main.aspx页面,访问此页面通过的是get方式。<br><br><img src="https://i.imgur.com/cQl9Buk.png" alt="enter image description here"><br><br>此时的字符串和上次post提交时的是相同的。<br><br>分析完成之后，代码如下</p><br><pre><code>    function curl_request($url,$post=’’,$referer=’’){<br>        $curl = curl_init();<br>        curl_setopt($curl, CURLOPT_URL, $url);<br>        curl_setopt($curl, CURLOPT_USERAGENT, ‘Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)’);<br>        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);<br>        curl_setopt($curl, CURLOPT_AUTOREFERER, 1);<br>        curl_setopt($curl, CURLOPT_HEADER, 0);<br>        curl_setopt($curl, CURLOPT_REFERER, “<a href="http://211.87.155.19/default2.aspx" target="_blank" rel="external">http://211.87.155.19/default2.aspx</a>“);<br>        if($post) {<br>            curl_setopt($curl, CURLOPT_POST, 1);<br>            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post));<br>        }<br><br>        if ($referer) {<br>             curl_setopt($curl, CURLOPT_REFERER, $referer);<br>                      }<br>      else{<br>                curl_setopt($curl, CURLOPT_HEADER, 1);<br>          }<br><br><br>        curl_setopt($curl, CURLOPT_TIMEOUT, 10);<br>        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);<br>        $data = curl_exec($curl);<br>        curl_close($curl);<br><br>}<br></code></pre><br><p>这是自己写的一个curl函数，用来完成基本的操作。</p><br><pre><code>    function getView(){<br>     $res;<br>     $url = ‘<a href="http://211.87.155.19/default2.aspx" target="_blank" rel="external">http://211.87.155.19/default2.aspx</a>‘;<br>     $result = $this-&gt;curl_request($url);<br>     preg_match(‘/Location: \/((.<em>))/‘, $result,$aa);<br>     $pattern = ‘/&lt;input type=”hidden” name=”__VIEWSTATE” value=”(.</em>?)” \/&gt;/is’;<br>     preg_match_all($pattern, $result, $matches);<br>     $res[0] = $matches[1][0];<br>     $res[1] = $aa[1];<br>     return $res;<br>}<br></code></pre><br><p>这段代码的作用是获得<strong>VIEWSTATE和url中的随机字符串。</strong></p><br><pre><code> function login($temp){<br><br><br>     $url = ‘<a href="http://211.87.155.19/(&#39;.$temp[1].&#39;)/default2.aspx" target="_blank" rel="external">http://211.87.155.19/(&#39;.$temp[1].&#39;)/default2.aspx</a>‘;<br><br>     $post[‘VIEWSTATE’] = $temp[0];<br>     $post[‘txtUserName’] = ‘’;//你的账号<br>     $post[‘TextBox2’] = ‘’;//你的密码<br>     $post[‘txtSecretCode’] = ‘’;<br>     $post[‘lbLanguage’] = ‘’;<br>     $post[‘RadioButtonList1’] =iconv(‘utf-8’, ‘gb2312’, ‘学生’);<br>     $post[‘Button1’] = ‘’;<br>     $result = $this-&gt;curl_request($url,$post);//模拟第一次post提交<br>     $referer=’<a href="http://211.87.155.19/(&#39;.$temp[1].&#39;)/xs_main.aspx?xh=&#39;.$post[&#39;txtUserName" target="_blank" rel="external">http://211.87.155.19/(&#39;.$temp[1].&#39;)/xs_main.aspx?xh=&#39;.$post[&#39;txtUserName</a>‘];<br>     $result =$this-&gt;curl_request($referer,’’,$url);//模拟第二次get提交<br><br>     }<br></code></pre><br><pre><code>        $temp = getView();<br>        login($temp);<br><br></code></pre><br><p>此时即完成模拟登陆</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/03/21/README/" itemprop="url">
                   未命名
                 </a>
@@ -338,13 +517,81 @@
         
           
             <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><p>=======</p>
+<h3 id="Create-a-new-post-1"><a href="#Create-a-new-post-1" class="headerlink" title="Create a new post"></a>Create a new post</h3><blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>5997500587af3a65354d01345246995714381d8f</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
 <p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><p>=======</p>
+<h3 id="Run-server-1"><a href="#Run-server-1" class="headerlink" title="Run server"></a>Run server</h3><blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>5997500587af3a65354d01345246995714381d8f</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
 <p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><p>=======</p>
+<h3 id="Generate-static-files-1"><a href="#Generate-static-files-1" class="headerlink" title="Generate static files"></a>Generate static files</h3><blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>5997500587af3a65354d01345246995714381d8f</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
 <p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><p>=======</p>
+<h3 id="Deploy-to-remote-sites-1"><a href="#Deploy-to-remote-sites-1" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>5997500587af3a65354d01345246995714381d8f</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
 <p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
 
           
@@ -411,7 +658,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">2</span>
+              <span class="site-state-item-count">4</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
