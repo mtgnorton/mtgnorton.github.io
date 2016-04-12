@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>马廷广</title>
+  <subtitle>O ever youthful,O ever weeping.</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://mtgnorton.github.io/"/>
+  <updated>2016-03-24T10:21:25.763Z</updated>
+  <id>http://mtgnorton.github.io/</id>
+  
+  <author>
+    <name>马廷广</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>正方系统模拟登陆</title>
+    <link href="http://mtgnorton.github.io/2016/03/21/spider_zhengfang/"/>
+    <id>http://mtgnorton.github.io/2016/03/21/spider_zhengfang/</id>
+    <published>2016-03-21T14:29:01.293Z</published>
+    <updated>2016-03-24T10:21:25.763Z</updated>
+    
+    <content type="html">&lt;p&gt;在爬取的时候，首先使用浏览器登陆进行抓包，&lt;br&gt;&lt;br&gt;&lt;img src=&quot;https://i.imgur.com/wTfFiMW.png&quot; alt=&quot;enter image description here&quot;&gt;&lt;/p&gt;&lt;br&gt;&lt;p&gt;第一次抓包主要提交了两次，第一次是向default2.aspx进行post提交&lt;br&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;&lt;img src=&quot;https://i.imgur.com/6d3i0l3.png&quot; alt=&quot;enter image description here&quot;&gt;&lt;/p&gt;&lt;br&gt;&lt;p&gt;，虽然被重定向，但是这一次提交，完成了数据的验证，验证的字段如图所示，第一个字段是登陆界面的一个隐藏字段，可以通过正则获取到，txtSecretCode是验证码，这是正方系统的一个小bug，在我们模拟登陆的时候可以忽略，RadioButtonList1代表的是学生。&lt;br&gt;&lt;br&gt;&lt;img src=&quot;https://i.imgur.com/VUfXeXz.png&quot; alt=&quot;enter image description here&quot;&gt;&lt;br&gt;&lt;br&gt;上图中我们可以看到Request URL中附加了一个字段，这个字段是随即的，经过测试，得出正方系统有两种登陆方式，一种是通过cookie来确认用户，另一种是通过随即字符串的形式，现在我们校网所使用的是随机字符串的形式。在第一次向default2.aspx 进行post提交时，可能是通过js产生了随即字符串并被附着在url中，验证通过之后会被重定向到xs_main.aspx页面,访问此页面通过的是get方式。&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;img src=&quot;https://i.imgur.com/cQl9Buk.png&quot; alt=&quot;enter image description here&quot;&gt;&lt;br&gt;&lt;br&gt;此时的字符串和上次post提交时的是相同的。&lt;br&gt;&lt;br&gt;分析完成之后，代码如下&lt;/p&gt;&lt;br&gt;&lt;pre&gt;&lt;code&gt;    function curl_request($url,$post=’’,$referer=’’){&lt;br&gt;        $curl = curl_init();&lt;br&gt;        curl_setopt($curl, CURLOPT_URL, $url);&lt;br&gt;        curl_setopt($curl, CURLOPT_USERAGENT, ‘Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)’);&lt;br&gt;        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);&lt;br&gt;        curl_setopt($curl, CURLOPT_AUTOREFERER, 1);&lt;br&gt;        curl_setopt($curl, CURLOPT_HEADER, 0);&lt;br&gt;        curl_setopt($curl, CURLOPT_REFERER, “&lt;a href=&quot;http://211.87.155.19/default2.aspx&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://211.87.155.19/default2.aspx&lt;/a&gt;“);&lt;br&gt;        if($post) {&lt;br&gt;            curl_setopt($curl, CURLOPT_POST, 1);&lt;br&gt;            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post));&lt;br&gt;        }&lt;br&gt;&lt;br&gt;        if ($referer) {&lt;br&gt;             curl_setopt($curl, CURLOPT_REFERER, $referer);&lt;br&gt;                      }&lt;br&gt;      else{&lt;br&gt;                curl_setopt($curl, CURLOPT_HEADER, 1);&lt;br&gt;          }&lt;br&gt;&lt;br&gt;&lt;br&gt;        curl_setopt($curl, CURLOPT_TIMEOUT, 10);&lt;br&gt;        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);&lt;br&gt;        $data = curl_exec($curl);&lt;br&gt;        curl_close($curl);&lt;br&gt;&lt;br&gt;}&lt;br&gt;&lt;/code&gt;&lt;/pre&gt;&lt;br&gt;&lt;p&gt;这是自己写的一个curl函数，用来完成基本的操作。&lt;/p&gt;&lt;br&gt;&lt;pre&gt;&lt;code&gt;    function getView(){&lt;br&gt;     $res;&lt;br&gt;     $url = ‘&lt;a href=&quot;http://211.87.155.19/default2.aspx&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://211.87.155.19/default2.aspx&lt;/a&gt;‘;&lt;br&gt;     $result = $this-&amp;gt;curl_request($url);&lt;br&gt;     preg_match(‘/Location: \/((.&lt;em&gt;))/‘, $result,$aa);&lt;br&gt;     $pattern = ‘/&amp;lt;input type=”hidden” name=”__VIEWSTATE” value=”(.&lt;/em&gt;?)” \/&amp;gt;/is’;&lt;br&gt;     preg_match_all($pattern, $result, $matches);&lt;br&gt;     $res[0] = $matches[1][0];&lt;br&gt;     $res[1] = $aa[1];&lt;br&gt;     return $res;&lt;br&gt;}&lt;br&gt;&lt;/code&gt;&lt;/pre&gt;&lt;br&gt;&lt;p&gt;这段代码的作用是获得&lt;strong&gt;VIEWSTATE和url中的随机字符串。&lt;/strong&gt;&lt;/p&gt;&lt;br&gt;&lt;pre&gt;&lt;code&gt; function login($temp){&lt;br&gt;&lt;br&gt;&lt;br&gt;     $url = ‘&lt;a href=&quot;http://211.87.155.19/(&amp;#39;.$temp[1].&amp;#39;)/default2.aspx&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://211.87.155.19/(&amp;#39;.$temp[1].&amp;#39;)/default2.aspx&lt;/a&gt;‘;&lt;br&gt;&lt;br&gt;     $post[‘VIEWSTATE’] = $temp[0];&lt;br&gt;     $post[‘txtUserName’] = ‘’;//你的账号&lt;br&gt;     $post[‘TextBox2’] = ‘’;//你的密码&lt;br&gt;     $post[‘txtSecretCode’] = ‘’;&lt;br&gt;     $post[‘lbLanguage’] = ‘’;&lt;br&gt;     $post[‘RadioButtonList1’] =iconv(‘utf-8’, ‘gb2312’, ‘学生’);&lt;br&gt;     $post[‘Button1’] = ‘’;&lt;br&gt;     $result = $this-&amp;gt;curl_request($url,$post);//模拟第一次post提交&lt;br&gt;     $referer=’&lt;a href=&quot;http://211.87.155.19/(&amp;#39;.$temp[1].&amp;#39;)/xs_main.aspx?xh=&amp;#39;.$post[&amp;#39;txtUserName&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://211.87.155.19/(&amp;#39;.$temp[1].&amp;#39;)/xs_main.aspx?xh=&amp;#39;.$post[&amp;#39;txtUserName&lt;/a&gt;‘];&lt;br&gt;     $result =$this-&amp;gt;curl_request($referer,’’,$url);//模拟第二次get提交&lt;br&gt;&lt;br&gt;     }&lt;br&gt;&lt;/code&gt;&lt;/pre&gt;&lt;br&gt;&lt;pre&gt;&lt;code&gt;        $temp = getView();&lt;br&gt;        login($temp);&lt;br&gt;&lt;br&gt;&lt;/code&gt;&lt;/pre&gt;&lt;br&gt;&lt;p&gt;此时即完成模拟登陆&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在爬取的时候，首先使用浏览器登陆进行抓包，&lt;br&gt;&lt;br&gt;&lt;img src=&quot;https://i.imgur.com/wTfFiMW.png&quot; alt=&quot;enter image description here&quot;&gt;&lt;/p&gt;&lt;br&gt;&lt;p&gt;第一次抓包主要提交了两次，第一次是向default2.aspx进行post提交&lt;br&gt;&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="正方" scheme="http://mtgnorton.github.io/tags/%E6%AD%A3%E6%96%B9/"/>
+    
+      <category term="php" scheme="http://mtgnorton.github.io/tags/php/"/>
+    
+      <category term="爬虫" scheme="http://mtgnorton.github.io/tags/%E7%88%AC%E8%99%AB/"/>
+    
+  </entry>
+  
+</feed>
