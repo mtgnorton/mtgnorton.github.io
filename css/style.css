@@ -2020,14 +2020,14 @@ li:hover {
 }
 .article-entry pre,
 .article-entry .highlight {
-  background: rgba(0,40,91,0.8);
+  background: rgba(51,51,51,0.85);
   margin: auto;
   padding: 0.35em 1.5em;
   border-style: solid;
   border-color: #ddd;
   border-width: 1px;
   overflow: auto;
-  color: #fff;
+  color: #ccc;
   line-height: 22.400000000000002px;
 }
 .article-entry .highlight .gutter pre,
@@ -2044,7 +2044,7 @@ li:hover {
   text-shadow: none;
   padding: 0;
   background: none;
-  color: #7285b7;
+  color: #999;
 }
 .article-entry .highlight {
   -webkit-border-radius: 2px;
@@ -2070,7 +2070,7 @@ li:hover {
 }
 .article-entry .highlight figcaption {
   font-size: 0.85em;
-  color: #7285b7;
+  color: #999;
   line-height: 1em;
   margin-bottom: 1em;
 }
@@ -2097,7 +2097,7 @@ li:hover {
   border-style: solid;
   border-color: #ddd;
   border-width: 1px 0;
-  background: rgba(0,40,91,0.8);
+  background: rgba(51,51,51,0.85);
   padding: 15px 20px 15px 0;
 }
 .article-entry .gist .gist-file {
@@ -2123,8 +2123,8 @@ li:hover {
   border: none;
 }
 .article-entry .gist .gist-file .gist-meta {
-  background: rgba(0,40,91,0.8);
-  color: #7285b7;
+  background: rgba(51,51,51,0.85);
+  color: #999;
   font: 0.85em "Lucida Grande", Verdana, "Helvetica Neue", Arial, sans-serif;
   text-shadow: 0 0;
   padding: 0;
@@ -2144,13 +2144,13 @@ li:hover {
   padding: 0.05em 0.3em;
   -webkit-border-radius: 3px;
   border-radius: 3px;
-  var: false;
+  var: true;
   color: #fff;
-  color: #808080;
+  background: rgba(153,204,153,0.7);
 }
 pre .comment,
 pre .title {
-  color: #7285b7;
+  color: #999;
 }
 pre .variable,
 pre .attribute,
@@ -2164,7 +2164,7 @@ pre .html .doctype,
 pre .css .id,
 pre .css .class,
 pre .css .pseudo {
-  color: #ff9da4;
+  color: #f2777a;
 }
 pre .number,
 pre .preprocessor,
@@ -2172,12 +2172,12 @@ pre .built_in,
 pre .literal,
 pre .params,
 pre .constant {
-  color: #ffc58f;
+  color: #f99157;
 }
 pre .class,
 pre .ruby .class .title,
 pre .css .rules .attribute {
-  color: #d1f1a9;
+  color: #9c9;
 }
 pre .string,
 pre .value,
@@ -2185,10 +2185,10 @@ pre .inheritance,
 pre .header,
 pre .ruby .symbol,
 pre .xml .cdata {
-  color: #d1f1a9;
+  color: #9c9;
 }
 pre .css .hexcolor {
-  color: #9ff;
+  color: #6cc;
 }
 pre .function,
 pre .python .decorator,
@@ -2198,11 +2198,11 @@ pre .ruby .title .keyword,
 pre .perl .sub,
 pre .javascript .title,
 pre .coffeescript .title {
-  color: #bbdaff;
+  color: #69c;
 }
 pre .keyword,
 pre .javascript .function {
-  color: #ebbbff;
+  color: #c9c;
 }
 #footer {
   font-size: 0.8em;
